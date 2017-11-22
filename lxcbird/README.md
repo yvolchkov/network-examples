@@ -41,6 +41,7 @@ Here's the `/etc/network/interfaces` of my lxc host, well, almost, since I repla
         down ip addr del 10.255.1.34/24 dev eth0
         down ip link set down dev eth0
 
+    auto ovs0
     allow-ovs ovs0
     iface ovs0 inet manual
         pre-up ovs-vsctl add-br ovs0
@@ -48,6 +49,7 @@ Here's the `/etc/network/interfaces` of my lxc host, well, almost, since I repla
         down ip link set down dev ovs0
         post-down ovs-vsctl del-br ovs0
 
+    auto vlan10
     allow-ovs vlan10
     iface vlan10 inet manual
         pre-up ovs-vsctl add-port ovs0 vlan10 tag=10 -- set interface vlan10 type=internal
@@ -67,7 +69,7 @@ To enable masquerading outgoing traffic from the test networks, make sure you en
     net.ipv6.conf.all.forwarding = 1
     net.ipv6.conf.default.forwarding = 1
 
-...and by using a few simple netfilter rules to do the NAT, like...
+...and by using a few simple netfilter rules to do the NAT, in the /etc/network/firewall:
 
     *nat
     -A POSTROUTING -o eth0 -j MASQUERADE
@@ -77,6 +79,10 @@ To enable masquerading outgoing traffic from the test networks, make sure you en
     -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
     -A FORWARD -i vlan10 -o eth0 -j ACCEPT
     COMMIT
+
+To make this load automatically every boot, add this line your vlan10 configuration in the /etc/network/interfaces:
+
+    pre-up iptables-restore < /etc/network/firewall
 
 
 ## Setting up version control
