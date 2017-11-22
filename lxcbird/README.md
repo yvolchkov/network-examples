@@ -53,8 +53,6 @@ Here's the `/etc/network/interfaces` of my lxc host, well, almost, since I repla
         pre-up ovs-vsctl add-port ovs0 vlan10 tag=10 -- set interface vlan10 type=internal
         up ip link set up dev vlan10
         up ip addr add 198.51.100.1/24 brd + dev vlan10
-        up ip addr add 2001:db8:1998::1/120 dev vlan10
-        down ip addr del 2001:db8:1998::1/120 dev vlan10
         down ip addr del 198.51.100.1/24 dev vlan10
         down ip link set down dev vlan10
         post-down ovs-vsctl del-port ovs0 vlan10
@@ -80,7 +78,6 @@ To enable masquerading outgoing traffic from the test networks, make sure you en
     -A FORWARD -i vlan10 -o eth0 -j ACCEPT
     COMMIT
 
-...which can be done for IPv4, as well as for IPv6, because NAT for IPv6 has finally been implemented. For test environments like this, it's very helpful, since we can just use documentation addresses from `2001:db8::/32` and are still able to access the outside internet if needed.
 
 ## Setting up version control
 
@@ -168,11 +165,8 @@ Instead of setting the container IP address and gateway in the lxc configuration
     iface vlan10 inet manual
         up ip link set up dev vlan10
         up ip addr add 198.51.100.254/24 brd + dev vlan10
-        up ip addr add 2001:db8:1998::fe/120 dev vlan10
         up ip route add default via 198.51.100.1 dev vlan10
         up ip route add default via 2001:db8:1998::1 dev vlan10
-        down ip -6 route del default
-        down ip addr del 2001:db8:1998::fe/120 dev vlan10
         down ip route del default
         down ip addr del 198.51.100.254/24 dev vlan10
         down ip link set down dev vlan10
